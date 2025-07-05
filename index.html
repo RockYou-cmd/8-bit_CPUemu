@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LittleEmu - 8-bit CPU Emulator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="toolbar">
+            <div class="toolbar-section">
+                <button id="newFile" class="toolbar-btn" title="New Program">
+                    <span class="icon">📄</span>
+                </button>
+                <button id="loadFile" class="toolbar-btn" title="Load Program">
+                    <span class="icon">📁</span>
+                </button>
+                <input type="file" id="fileInput" accept=".txt" style="display: none;">
+            </div>
+            
+            <div class="toolbar-section">
+                <button id="stepRun" class="toolbar-btn" title="Step Execute" disabled>
+                    <span class="icon">⏭️</span>
+                </button>
+                <button id="loopRun" class="toolbar-btn" title="Run/Pause" disabled>
+                    <span class="icon">▶️</span>
+                </button>
+                <button id="reset" class="toolbar-btn" title="Reset">
+                    <span class="icon">🔄</span>
+                </button>
+            </div>
+            
+            <div class="toolbar-section">
+                <label for="speedSlider">Speed:</label>
+                <input type="range" id="speedSlider" min="0.5" max="5" step="0.1" value="1">
+                <span id="speedValue">1.0x</span>
+            </div>
+            
+            <div class="toolbar-section">
+                <button id="helpBtn" class="toolbar-btn" title="Help">
+                    <span class="icon">❓</span>
+                </button>
+                <button id="aboutBtn" class="toolbar-btn" title="About">
+                    <span class="icon">ℹ️</span>
+                </button>
+            </div>
+        </header>
+
+        <main class="emulator-container">
+            <div class="cpu-section">
+                <h2>CPU</h2>
+                
+                <div class="registers-section">
+                    <h3>Registers</h3>
+                    <div class="registers-grid">
+                        <div class="register" id="regA">
+                            <label>REG_A</label>
+                            <div class="register-value" data-register="A">00000000</div>
+                            <button class="base-toggle" data-register="A">(BIN)</button>
+                        </div>
+                        <div class="register" id="regB">
+                            <label>REG_B</label>
+                            <div class="register-value" data-register="B">00000000</div>
+                            <button class="base-toggle" data-register="B">(BIN)</button>
+                        </div>
+                        <div class="register" id="regC">
+                            <label>REG_C</label>
+                            <div class="register-value" data-register="C">00000000</div>
+                            <button class="base-toggle" data-register="C">(BIN)</button>
+                        </div>
+                        <div class="register" id="regD">
+                            <label>REG_D</label>
+                            <div class="register-value" data-register="D">00000000</div>
+                            <button class="base-toggle" data-register="D">(BIN)</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-unit">
+                    <h3>Control Unit</h3>
+                    <div class="control-registers">
+                        <div class="register" id="instructionReg">
+                            <label>Instruction Register</label>
+                            <div class="register-value" data-register="IR">00000000</div>
+                            <button class="base-toggle" data-register="IR">(BIN)</button>
+                        </div>
+                        <div class="register" id="addressReg">
+                            <label>Address Register</label>
+                            <div class="register-value" data-register="AR">0000</div>
+                            <button class="base-toggle" data-register="AR">(BIN)</button>
+                        </div>
+                    </div>
+                    
+                    <div class="flags">
+                        <h4>Flags</h4>
+                        <div class="flags-container">
+                            <div class="flag" id="oFlag">O</div>
+                            <div class="flag" id="zFlag">Z</div>
+                            <div class="flag" id="nFlag">N</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alu-section">
+                    <h3>ALU</h3>
+                    <div class="alu-display">
+                        <div class="alu-inputs">
+                            <div>Input A: <span id="aluInputA">0</span></div>
+                            <div>Input B: <span id="aluInputB">0</span></div>
+                        </div>
+                        <div class="alu-operation">
+                            <div>Operation: <span id="aluOperation">-</span></div>
+                        </div>
+                        <div class="alu-output">
+                            <div>Output: <span id="aluOutput">0</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="memory-section">
+                <h2>RAM</h2>
+                <div class="memory-controls">
+                    <button id="ramAddressToggle" class="base-toggle">(BIN)</button>
+                </div>
+                <div class="memory-grid" id="memoryGrid">
+                    <!-- Memory cells will be generated by JavaScript -->
+                </div>
+            </div>
+        </main>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <span>Stage: </span>
+                <span id="cpuStage">IDLE</span>
+            </div>
+            <div class="status-item">
+                <span>PC: </span>
+                <span id="programCounter">0</span>
+            </div>
+            <div class="status-item">
+                <span>Cycles: </span>
+                <span id="cycleCount">0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="programModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Program Editor</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <textarea id="programEditor" placeholder="Enter your assembly code here...
+Example:
+LOAD_A 14D
+LOAD_B 15D
+ADD A,B
+STORE_A 12D
+HALT"></textarea>
+                <div class="editor-controls">
+                    <button id="loadDemo1">Demo: Add Numbers</button>
+                    <button id="loadDemo2">Demo: Subtract Numbers</button>
+                    <button id="loadDemo3">Demo: Infinite Loop</button>
+                    <button id="assembleCode">Assemble & Load</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Instruction Set</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="instruction-set">
+                    <h4>Data Movement</h4>
+                    <ul>
+                        <li><strong>LOAD_A addr</strong> - Load value from memory address into register A</li>
+                        <li><strong>LOAD_B addr</strong> - Load value from memory address into register B</li>
+                        <li><strong>LOAD_C addr</strong> - Load value from memory address into register C</li>
+                        <li><strong>LOAD_D addr</strong> - Load value from memory address into register D</li>
+                        <li><strong>STORE_A addr</strong> - Store register A value to memory address</li>
+                        <li><strong>STORE_B addr</strong> - Store register B value to memory address</li>
+                        <li><strong>STORE_C addr</strong> - Store register C value to memory address</li>
+                        <li><strong>STORE_D addr</strong> - Store register D value to memory address</li>
+                    </ul>
+                    
+                    <h4>Arithmetic</h4>
+                    <ul>
+                        <li><strong>ADD reg1,reg2</strong> - Add reg2 to reg1, store result in reg1</li>
+                        <li><strong>SUB reg1,reg2</strong> - Subtract reg2 from reg1, store result in reg1</li>
+                    </ul>
+                    
+                    <h4>Control Flow</h4>
+                    <ul>
+                        <li><strong>JUMP addr</strong> - Jump to address</li>
+                        <li><strong>JUMP_NEG addr</strong> - Jump to address if negative flag is set</li>
+                        <li><strong>JUMP_ZRO addr</strong> - Jump to address if zero flag is set</li>
+                        <li><strong>HALT</strong> - Stop execution</li>
+                    </ul>
+                    
+                    <h4>Address Formats</h4>
+                    <ul>
+                        <li><strong>Binary:</strong> 1010B (4 bits max)</li>
+                        <li><strong>Decimal:</strong> 10D (0-15)</li>
+                        <li><strong>Hexadecimal:</strong> AH (0-F)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="aboutModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>About LittleEmu</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="about-content">
+                    <h4>LittleEmu - 8-bit CPU Emulator</h4>
+                    <p>An educational tool for learning computer architecture and assembly programming.</p>
+                    
+                    <h5>Features:</h5>
+                    <ul>
+                        <li>Simple 8-bit CPU simulation</li>
+                        <li>4 general-purpose registers</li>
+                        <li>16 bytes of RAM</li>
+                        <li>Visual execution with step-by-step debugging</li>
+                        <li>Multiple number base representations</li>
+                        <li>Built-in assembler</li>
+                    </ul>
+                    
+                    <p><strong>Original Java version by Jorge Villalta (2021)</strong></p>
+                    <p><strong>Web version converted for educational use</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/cpu.js"></script>
+    <script src="js/memory.js"></script>
+    <script src="js/assembler.js"></script>
+    <script src="js/emulator.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
